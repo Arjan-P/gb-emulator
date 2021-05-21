@@ -296,7 +296,7 @@ class Opcodes:
             '0x12': ("LD (DE), A",      1, TYPE_VOID,  8, None),
             '0x13': self.Ins.x13,
             '0x14': ("INC D",           1, TYPE_VOID,  4, ("Z", 0, "H")),
-            '0x15': ("DEC D",           1, TYPE_VOID,  4, ("Z", 1, "H")),
+            '0x15': self.Ins.x15,
             '0x16': ("LD D, d8",        2, TYPE_D8,    8, None),
             '0x17': self.Ins.x17,
             '0x18': self.Ins.x18,

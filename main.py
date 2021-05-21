@@ -3,6 +3,8 @@ import cpu
 import registers
 import bus
 import ppu
+from timeit import default_timer as timer
+from datetime import timedelta
 
 def main():
 
@@ -21,9 +23,22 @@ def main():
     with open(args.rom_path, 'rb') as file:
         # TODO load full file
         b.loadRom(file.read()[0x100:])
-    while True:#b.cpu.running:
+
+    start=timer()
+    while True:
         b.Clock()
-    print(b.read(0xff40))
+    end=timer()
+    print(timedelta(seconds=end-start))
+
+    b.cpu.log(True)
+    addr=0x8000
+    with open('./VRAM/bgTiles.txt','w') as f:
+        for x in range(25):
+            f.write(f'{hex(addr)}:  ')
+            for y in range(16):
+                f.write(b.read(addr+y).to_bytes(1,'little').hex())
+            addr+=0x010
+            f.write('\n')
 
 if __name__ == '__main__':
     main()

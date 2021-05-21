@@ -4,6 +4,10 @@ class Instructions:
     def __init__(self):
         super().__init__()
 
+    def log(self,msg,logging=False):
+        if logging:
+            print(msg)
+
     def x04(self,cpu):
         '''
         Increment the contents of register B by 1.
@@ -18,7 +22,7 @@ class Instructions:
         else:
             cpu.registers.Clear('h')
         cpu.registers.Clear('n')
-        print('INC B')
+        self.log('INC B')
         cpu.cycles = 1
         cpu.registers.pc_reg+=1
 
@@ -33,7 +37,7 @@ class Instructions:
         else:
             cpu.registers.Clear('z')
         cpu.registers.Set('n')
-        print('DEC B')
+        self.log('DEC B')
         cpu.cycles=1
         cpu.registers.pc_reg+=1
 
@@ -43,7 +47,7 @@ class Instructions:
         '''
         data = cpu.bus.read(cpu.registers.pc_reg+1)
         cpu.registers.b_reg=data
-        print(f'LD B {hex(data)}')
+        self.log(f'LD B {hex(data)}')
         cpu.cycles=2
         cpu.registers.pc_reg+=2
 
@@ -61,7 +65,7 @@ class Instructions:
         else:
             cpu.registers.Clear('h')
         cpu.registers.Clear('n')
-        print('INC C')
+        self.log('INC C')
         cpu.cycles=1
         cpu.registers.pc_reg+=1
 
@@ -75,7 +79,7 @@ class Instructions:
         else:
             cpu.registers.Clear('z')
         cpu.registers.Set('n')
-        print('DEC C')
+        self.log('DEC C')
         cpu.cycles=1
         cpu.registers.pc_reg+=1
 
@@ -85,7 +89,7 @@ class Instructions:
         '''
         data = cpu.bus.read(cpu.registers.pc_reg+1)
         cpu.registers.c_reg = data
-        print(f'LD C {hex(data)}')
+        self.log(f'LD C {hex(data)}')
         cpu.cycles=2
         cpu.registers.pc_reg+=2
 
@@ -99,7 +103,7 @@ class Instructions:
         data = cpu.bus.read(cpu.registers.pc_reg+1,2)
         cpu.registers.d_reg = cpu.bus.read(cpu.registers.pc_reg+2)
         cpu.registers.e_reg = cpu.bus.read(cpu.registers.pc_reg+1)
-        print(f'LD DE {hex(data)}')
+        self.log(f'LD DE {hex(data)}')
         cpu.cycles=3
         cpu.registers.pc_reg+=3
     
@@ -109,9 +113,25 @@ class Instructions:
         '''
         cpu.registers.d_reg=cpu.registers.inc([cpu.registers.d_reg,cpu.registers.e_reg],1)[0]
         cpu.registers.e_reg=cpu.registers.inc([cpu.registers.d_reg,cpu.registers.e_reg],1)[1]
-        print('INC DE')
+        self.log('INC DE')
         cpu.cycles=2
         cpu.registers.pc_reg+=1  
+
+    def x15(self,cpu):
+        '''
+        Decrement the contents of register D by 1.
+        '''
+        cpu.registers.d_reg=np.uint8(cpu.registers.d_reg-1)
+        if cpu.registers.d_reg == 0:
+            cpu.registers.Set('z')
+        else:
+            cpu.registers.Clear('z')
+        cpu.registers.Set('n')
+        self.log('DEC D')
+        cpu.cycles=1
+        cpu.registers.pc_reg+=1
+        cpu.running=False
+        
 
     def x17(self,cpu):
         '''
@@ -137,7 +157,7 @@ class Instructions:
             cpu.registers.Clear('z')
         cpu.registers.Clear('n')
         cpu.registers.Clear('h')
-        print('RL A')
+        self.log('RL A')
         cpu.cycles=1
         cpu.registers.pc_reg+=1
 
@@ -146,7 +166,7 @@ class Instructions:
         Jump s8 steps from the current address in the program counter (PC). (Jump relative.)
         '''
         val = cpu.bus.read(cpu.registers.pc_reg+1)
-        print(f'JR {hex(val)}')
+        self.log(f'JR {hex(val)}')
         j=np.uint8(val+cpu.registers.pc_reg+2)
         cpu.cycles=3
         cpu.registers.pc_reg=j
@@ -158,7 +178,7 @@ class Instructions:
         addr = (cpu.registers.d_reg<<8)+cpu.registers.e_reg
         data = cpu.bus.read(addr)
         cpu.registers.a_reg=data
-        print(f'LD A ({hex(data)})')
+        self.log(f'LD A ({hex(data)})')
         cpu.cycles=2
         cpu.registers.pc_reg+=1
     
@@ -173,7 +193,7 @@ class Instructions:
         else:
             cpu.registers.Clear('z')
         cpu.registers.Set('n')
-        print('DEC E')
+        self.log('DEC E')
         cpu.cycles=1
         cpu.registers.pc_reg+=1
 
@@ -183,7 +203,7 @@ class Instructions:
         '''
         data = cpu.bus.read(cpu.registers.pc_reg+1)
         cpu.registers.e_reg = data
-        print(f'LD E {hex(data)}')
+        self.log(f'LD E {hex(data)}')
         cpu.cycles=2
         cpu.registers.pc_reg+=2
 
@@ -193,7 +213,7 @@ class Instructions:
         counter (PC). If not, the instruction following the current JP instruction is executed (as usual).
         '''
         if cpu.registers.isSet('z'):
-            print('JR NZ s8')
+            self.log('JR NZ s8')
             cpu.registers.pc_reg+=2
             cpu.cycles=2
             
@@ -202,7 +222,7 @@ class Instructions:
             cpu.registers.pc_reg+=2
             
             j=np.uint8(val+cpu.registers.pc_reg)
-            print(f'JR NZ {hex(j)}')
+            self.log(f'JR NZ {hex(j)}')
             cpu.registers.pc_reg=j
             cpu.cycles=3
             
@@ -216,7 +236,7 @@ class Instructions:
         data = cpu.bus.read(cpu.registers.pc_reg+1,2)
         cpu.registers.h_reg = cpu.registers.byte_to_bytes(data)[0]
         cpu.registers.l_reg = cpu.registers.byte_to_bytes(data)[1]
-        print(f'LD HL {hex(data)}')
+        self.log(f'LD HL {hex(data)}')
         cpu.cycles=3
         cpu.registers.pc_reg+=3
 
@@ -229,7 +249,7 @@ class Instructions:
         cpu.bus.write(addr,cpu.registers.a_reg)
         cpu.registers.h_reg=cpu.registers.inc([cpu.registers.h_reg,cpu.registers.l_reg],1)[0]
         cpu.registers.l_reg=cpu.registers.inc([cpu.registers.h_reg,cpu.registers.l_reg],1)[1]
-        print('LD (HL+) A')
+        self.log('LD (HL+) A')
         cpu.registers.pc_reg+=1
         cpu.cycles=2
 
@@ -239,7 +259,7 @@ class Instructions:
         '''
         cpu.registers.h_reg=cpu.registers.inc([cpu.registers.h_reg,cpu.registers.l_reg],1)[0]
         cpu.registers.l_reg=cpu.registers.inc([cpu.registers.h_reg,cpu.registers.l_reg],1)[1]
-        print('INC HL')
+        self.log('INC HL')
         cpu.registers.pc_reg+=1
         cpu.cycles=2
 
@@ -257,7 +277,7 @@ class Instructions:
         else:
             cpu.registers.Clear('h')
         cpu.registers.Clear('n')
-        print('INC H')
+        self.log('INC H')
         cpu.cycles=1
         cpu.registers.pc_reg+=1
 
@@ -273,11 +293,11 @@ class Instructions:
             cpu.registers.pc_reg+=2
             cpu.cycles=3
             j=np.uint8(val+cpu.registers.pc_reg)
-            print(f'JR Z {hex(j)}')
+            self.log(f'JR Z {hex(j)}')
            
             cpu.registers.pc_reg=j             
         else: 
-            print('JR Z s8')
+            self.log('JR Z s8')
             cpu.registers.pc_reg+=2
             cpu.cycles=2
 
@@ -287,7 +307,7 @@ class Instructions:
         '''
         data = cpu.bus.read(cpu.registers.pc_reg+1)
         cpu.registers.l_reg=data
-        print(f'LD L {hex(data)}')
+        self.log(f'LD L {hex(data)}')
         cpu.cycles=2
         cpu.registers.pc_reg+=2
 
@@ -300,7 +320,7 @@ class Instructions:
         '''
         data = cpu.bus.read(cpu.registers.pc_reg+1,2)
         cpu.registers.sp_reg = data
-        print(f'LD SP {hex(data)}')
+        self.log(f'LD SP {hex(data)}')
         cpu.cycles = 3
         cpu.registers.pc_reg+=3
 
@@ -313,7 +333,7 @@ class Instructions:
         cpu.bus.write(addr,cpu.registers.a_reg)
         cpu.registers.h_reg=cpu.registers.dec([cpu.registers.h_reg,cpu.registers.l_reg],1)[0]
         cpu.registers.l_reg=cpu.registers.dec([cpu.registers.h_reg,cpu.registers.l_reg],1)[1]
-        print('LD (HL-) A')
+        self.log('LD (HL-) A')
         cpu.registers.pc_reg+=1
         cpu.cycles=2
         
@@ -332,7 +352,7 @@ class Instructions:
         else:
             cpu.registers.Clear('h')
         cpu.registers.Clear('n')
-        print('INC A')
+        self.log('INC A')
         cpu.registers.pc_reg+=1
         cpu.cycles=1
     
@@ -346,7 +366,7 @@ class Instructions:
         else:
             cpu.registers.Clear('z')
         cpu.registers.Set('n')
-        print('DEC A')
+        self.log('DEC A')
         cpu.registers.pc_reg+=1
         cpu.cycles=1
 
@@ -356,7 +376,7 @@ class Instructions:
         '''
         data = cpu.bus.read(cpu.registers.pc_reg+1)
         cpu.registers.a_reg = data
-        print(f'LD A {hex(data)}')
+        self.log(f'LD A {hex(data)}')
         cpu.registers.pc_reg+=2
         cpu.cycles=2
 
@@ -365,7 +385,7 @@ class Instructions:
         Load the contents of register A into register C.
         '''
         cpu.registers.c_reg=cpu.registers.a_reg
-        print('LD C A')
+        self.log('LD C A')
         cpu.registers.pc_reg+=1
         cpu.cycles=1
 
@@ -374,7 +394,7 @@ class Instructions:
         Load the contents of register A into register D.
         '''
         cpu.registers.d_reg=cpu.registers.a_reg
-        print('LD D A')
+        self.log('LD D A')
         cpu.registers.pc_reg+=1
         cpu.cycles=1
 
@@ -383,7 +403,7 @@ class Instructions:
         Load the contents of register A into register H.
         '''
         cpu.registers.h_reg=cpu.registers.a_reg
-        print('LD H A')
+        self.log('LD H A')
         cpu.registers.pc_reg+=1
         cpu.cycles=1
 
@@ -393,7 +413,7 @@ class Instructions:
         '''
         addr = (cpu.registers.h_reg<<8)+cpu.registers.l_reg
         cpu.bus.write(addr,cpu.registers.a_reg)
-        print('LD (HL) A')
+        self.log('LD (HL) A')
         cpu.registers.pc_reg+=1
         cpu.cycles=2
 
@@ -402,7 +422,7 @@ class Instructions:
         Load the contents of register E into register A.
         '''
         cpu.registers.a_reg=cpu.registers.e_reg
-        print('LD A E')
+        self.log('LD A E')
         cpu.registers.pc_reg+=1
         cpu.cycles=1
 
@@ -411,7 +431,7 @@ class Instructions:
         Load the contents of register H into register A.
         '''
         cpu.registers.a_reg=cpu.registers.h_reg
-        print('LD A H')
+        self.log('LD A H')
         cpu.registers.pc_reg+=1
         cpu.cycles=1        
 
@@ -424,7 +444,7 @@ class Instructions:
             cpu.registers.Set('z')
         else:
             cpu.registers.Clear('z')
-        if cpu.registers.a_reg-cpu.registers.b_reg<0:
+        if int(cpu.registers.a_reg)-int(cpu.registers.b_reg)<0:
             cpu.registers.Set('c')
         else:
             cpu.registers.Clear('c')
@@ -445,7 +465,7 @@ class Instructions:
             cpu.registers.Clear('z')
         for x in ['n','h','c']:
             cpu.registers.Clear(x)
-        print('XOR A')
+        self.log('XOR A')
         cpu.registers.pc_reg+=1
         cpu.cycles=1
 
@@ -462,7 +482,7 @@ class Instructions:
         cpu.registers.sp_reg+=1
         cpu.registers.c_reg=cpu.bus.read(cpu.registers.sp_reg)
         cpu.registers.sp_reg+=1  
-        print('POP BC')
+        self.log('POP BC')
         cpu.registers.pc_reg+=1
         cpu.cycles=3
 
@@ -476,7 +496,7 @@ class Instructions:
         cpu.registers.sp_reg-=1
         cpu.bus.write(cpu.registers.sp_reg,cpu.registers.b_reg)
 
-        print('PUSH BC')
+        self.log('PUSH BC')
         cpu.registers.pc_reg+=1
         cpu.cycles=4
 
@@ -497,7 +517,7 @@ class Instructions:
         cpu.registers.sp_reg+=1
         b2=cpu.bus.read(cpu.registers.sp_reg)
         cpu.registers.sp_reg+=1
-        print(f'RET {hex(cpu.registers.bytes_to_byte([b1,b2]))}')
+        self.log(f'RET {hex(cpu.registers.bytes_to_byte([b1,b2]))}')
         cpu.registers.pc_reg = cpu.registers.bytes_to_byte([b1,b2])
         cpu.cycles=4
 
@@ -527,7 +547,7 @@ class Instructions:
         cpu.bus.write(cpu.registers.sp_reg,cpu.registers.byte_to_bytes(cpu.registers.pc_reg+3)[0])
 
         cpu.registers.pc_reg=j
-        print(f'CALL {hex(j)}')
+        self.log(f'CALL {hex(j)}')
         cpu.cycles=6
 
     def xE0(self,cpu):
@@ -545,7 +565,7 @@ class Instructions:
         data = cpu.bus.read(cpu.registers.pc_reg+1)
         addr=np.uint16(0xff00+data)
         cpu.bus.write(addr,cpu.registers.a_reg)
-        print(f'LD (0xff00 + {hex(data)}) A')
+        self.log(f'LD (0xff00 + {hex(data)}) A')
         cpu.registers.pc_reg+=2
         cpu.cycles=3
 
@@ -560,7 +580,7 @@ class Instructions:
         '''
         addr=np.uint16(0xff00+cpu.registers.c_reg)
         cpu.bus.write(addr,cpu.registers.a_reg)
-        print(f'LD (0xff00 + {hex(cpu.registers.c_reg)}) A')
+        self.log(f'LD (0xff00 + {hex(cpu.registers.c_reg)}) A')
         cpu.registers.pc_reg+=1
         cpu.cycles=2
 
@@ -571,7 +591,7 @@ class Instructions:
         '''
         addr = cpu.bus.read(cpu.registers.pc_reg+1,2)
         cpu.bus.write(addr,cpu.registers.a_reg)
-        print(f'LD ({hex(addr)}) A')
+        self.log(f'LD ({hex(addr)}) A')
         cpu.registers.pc_reg+=3
         cpu.cycles=4
 
@@ -590,8 +610,8 @@ class Instructions:
         val = cpu.bus.read(cpu.registers.pc_reg+1)
         addr = np.uint16(0xff00+val)
         cpu.registers.a_reg = cpu.bus.read(addr)
-        print(f'LD A ({hex(addr)})')
-        cpu.running=False
+        self.log(f'LD A ({hex(addr)})')
+        
         cpu.registers.pc_reg+=2
         cpu.cycles=3
 
@@ -615,13 +635,17 @@ class Instructions:
             cpu.registers.Clear('c')
 
         cpu.registers.Set('n')
-        print(f'CP {hex(data)}')
+        self.log(f'CP {hex(data)}')
         cpu.registers.pc_reg+=2
         cpu.cycles=2
 
 class PrefixedInstructions:
     def __init__(self):
         super().__init__()
+
+    def log(self,msg,logging=False):
+        if logging:
+            print(msg)
 
     def x11(self,cpu):
         '''
@@ -648,7 +672,7 @@ class PrefixedInstructions:
             cpu.registers.Clear('z')
         cpu.registers.Clear('n')
         cpu.registers.Clear('h')
-        print('RL C')
+        self.log('RL C')
         cpu.registers.pc_reg+=1
         cpu.cycles=2
 
@@ -663,6 +687,6 @@ class PrefixedInstructions:
             cpu.registers.Clear('z')
         cpu.registers.Clear('n')
         cpu.registers.Set('h')
-        print('BIT 7 H')
+        self.log('BIT 7 H')
         cpu.registers.pc_reg+=1
         cpu.cycles=2

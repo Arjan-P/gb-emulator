@@ -23,20 +23,20 @@ class CPU:
 
     def Clock(self):
         op = opcodes.Opcodes()
-        self.log(True)
+        self.log()
         if self.cycles == 0:
             code = hex(self.bus.read(self.registers.pc_reg))
             if self.pre:
-                print(f'{code}',end='\t')
+                #print(f'{code}',end='\t')
                 op.extended_opcodes[code](self)
                 self.pre=False
             else:
                 if code == '0xcb':
                     self.registers.pc_reg+=1
-                    print(f'{code}')
+                    #print(f'{code}')
                     self.pre=True
                     self.cycles+=1
                 else:
-                    print(f'{code}',end='\t')
+                    #print(f'{code}',end='\t')
                     op.opcodes[code](self)
         self.cycles-=1
